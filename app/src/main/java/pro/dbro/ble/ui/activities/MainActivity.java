@@ -1,17 +1,16 @@
 package pro.dbro.ble.ui.activities;
 
+import android.Manifest;
 import android.animation.ValueAnimator;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.FragmentManager;
-import android.content.Context;
-import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -36,9 +35,8 @@ import com.nispok.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
-import hugo.weaving.DebugLog;
 import im.delight.android.identicons.SymmetricIdenticon;
 import pro.dbro.airshare.app.AirShareService;
 import pro.dbro.airshare.app.ui.AirShareFragment;
@@ -73,35 +71,35 @@ public class MainActivity extends AppCompatActivity implements LogConsumer,
 
 //    private PeerAdapter mPeerAdapter;
 
-    @InjectView(R.id.status_spinner)
+    @BindView(R.id.status_spinner)
     Spinner mStatusSpinner;
 
-    @InjectView(R.id.log)
+    @BindView(R.id.log)
     TextView mLogView;
 
 //    @InjectView(R.id.peer_recyclerview)
 //    RecyclerView mPeerRecyclerView;
 
-    @InjectView(R.id.toolbar)
+    @BindView(R.id.toolbar)
     Toolbar mToolbar;
 
-    @InjectView(R.id.my_drawer_layout)
+    @BindView(R.id.my_drawer_layout)
     DrawerLayout mDrawer;
 
-    @InjectView(R.id.msg_pass_count)
+    @BindView(R.id.msg_pass_count)
     TextView mMessagesPassedCount;
 
-    @InjectView(R.id.peers_met_count)
+    @BindView(R.id.peers_met_count)
     TextView mPeersMetCount;
 
-    @InjectView(R.id.profile_identicon)
+    @BindView(R.id.profile_identicon)
     SymmetricIdenticon mProfileIdenticon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ButterKnife.inject(this);
+        ButterKnife.bind(this);
 
         mClient = new ChatClient(this);
 
@@ -122,11 +120,13 @@ public class MainActivity extends AppCompatActivity implements LogConsumer,
 
                     case 0: // Always online
                         mClient.makeAvailable();
+                        if (mAirShareFragment != null)
                         mAirShareFragment.setShouldServiceContinueInBackground(true);
                         break;
 
                     case 1: // Online when using app
                         mClient.makeAvailable();
+                        if (mAirShareFragment != null)
                         mAirShareFragment.setShouldServiceContinueInBackground(false);
                         break;
 
@@ -210,6 +210,8 @@ public class MainActivity extends AppCompatActivity implements LogConsumer,
                 }
             }
         });
+
+        askForPermission(Manifest.permission.ACCESS_FINE_LOCATION,1);
     }
 
     /**
@@ -430,4 +432,23 @@ public class MainActivity extends AppCompatActivity implements LogConsumer,
         mClient.createPrimaryIdentity(name);
         checkUserRegistered();
     }
+
+    private void askForPermission(String permission, Integer requestCode) {
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+
+                //This is called if user has denied the permission before
+                //In this case I am just asking the permission again
+                ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+
+            } else {
+
+                ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+            }
+        } else {
+        }
+    }
+
 }
